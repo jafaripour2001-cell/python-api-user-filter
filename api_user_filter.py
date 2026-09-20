@@ -1,65 +1,75 @@
-"""
-API Data Fetcher
------------------
-یک برنامه ساده که از یک API عمومی اطلاعات کاربران را دریافت می‌کند،
-بر اساس شهر فیلتر می‌کند و نتیجه را نمایش می‌دهد.
-"""
 
 import requests
 
 
-def get_data(url):
-    """
-    یک درخواست GET به آدرس url می‌فرستد و در صورت موفقیت،
-    داده را به صورت JSON برمی‌گرداند. در صورت بروز خطا (قطعی
-    اینترنت، آدرس اشتباه، timeout و ...) پیام خطا چاپ کرده و
-    None برمی‌گرداند.
-    """
+def get_users():
+    url = "https://jsonplaceholder.typicode.com/users"
+
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
+        return response.json()
 
-        data = response.json()
-        return data
-
-    except requests.exceptions.RequestException as e:
-        print("خطا:", e)
-        return None
+    except requests.RequestException as error:
+        print("خطا در اتصال به API:", error)
+        return []
 
 
-def filter_users(users, city):
-    """
-    از بین لیست کاربران، فقط کاربرانی که شهرشان برابر با
-    مقدار city است را در یک لیست جدید برمی‌گرداند.
-    """
-    result = []
+def show_all_users(users):
+    print("\n--- فهرست کاربران ---\n")
 
     for user in users:
-        if user["address"]["city"] == city:
-            result.append(user)
+        print("نام:", user["name"])
+        print("شهر:", user["address"]["city"])
+        print("ایمیل:", user["email"])
+        print("-" * 30)
 
-    return result
+
+def search_by_city(users):
+    city = input("\nنام شهر را وارد کنید: ").strip().lower()
+
+    found = False
+
+    for user in users:
+        user_city = user["address"]["city"]
+
+        if user_city.lower() == city:
+            print("\n✅ کاربر پیدا شد!")
+            print("نام:", user["name"])
+            print("شهر:", user_city)
+            print("ایمیل:", user["email"])
+            found = True
+
+    if not found:
+        print("\n❌ کاربری در این شهر پیدا نشد.")
 
 
 def main():
-    users_url = "https://jsonplaceholder.typicode.com/users"
-    users = get_data(users_url)
+    users = get_users()
 
     if not users:
-        print("دریافت اطلاعات کاربران با مشکل مواجه شد.")
         return
 
-    city_name = input("نام شهر را وارد کنید: ")
+    while True:
+        print("\n========== منوی برنامه ==========")
+        print("1. نمایش همه کاربران")
+        print("2. جست‌وجو بر اساس شهر")
+        print("3. خروج")
 
-    filtered_users = filter_users(users, city_name)
+        choice = input("\nگزینه موردنظر را انتخاب کنید: ")
 
-    if filtered_users:
-        for user in filtered_users:
-            print("Name:", user["name"])
-            print("Email:", user["email"])
-            print("-" * 20)
-    else:
-        print("کاربری در این شهر پیدا نشد.")
+        if choice == "1":
+            show_all_users(users)
+
+        elif choice == "2":
+            search_by_city(users)
+
+        elif choice == "3":
+            print("\nبرنامه بسته شد. موفق باشی! 🌷")
+            break
+
+        else:
+            print("\n❌ گزینه نامعتبر است.")
 
 
 if __name__ == "__main__":
